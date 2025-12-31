@@ -1,0 +1,9 @@
+title: $:/plugins/rryan/tiddly-mcp/configs/
+
+language: en-GB
+enabled: yes
+read-only: yes
+port: 3100
+cors-origins: *
+log-level: info
+default-content-type: text/vnd.tiddlywiki

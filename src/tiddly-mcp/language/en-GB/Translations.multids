@@ -1,0 +1,12 @@
+title: $:/plugins/rryan/tiddly-mcp/language/en-GB/
+
+Name: MCP Server Plugin
+Description: Model Context Protocol (MCP) server for TiddlyWiki - enables AI assistants to interact with your wiki.
+Configs/Description: These settings let you customise the behaviour of the MCP Server plugin.
+Configs/PluginConfigs/Caption: Plugin Configs
+Configs/Enabled/Caption: Whether the MCP server is enabled.
+Configs/ReadOnly/Caption: Whether the MCP server is in read-only mode.
+Configs/Port/Caption: The port to use for the MCP server.
+Configs/CorsOrigins/Caption: The cors-origins to enable.
+Configs/DefaultContentType/Caption: The default content type for tiddler writes.
+Configs/LogLevel/Caption: The log level for debugging.

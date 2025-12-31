@@ -1,0 +1,22 @@
+title: $:/plugins/rryan/tiddly-mcp/language/en-GB/Readme
+
+\procedure lingo-base() $:/plugins/rryan/tiddly-mcp/language/
+
+! <<lingo Name>>
+
+<<lingo Description>>
+
+Tiddly MCP is a [[Model Context Protocol|https://modelcontextprotocol.io/]]
+plugin for [[TiddlyWiki|https://tiddlywiki.com/]] that lets you connect AI agents
+to your TiddlyWiki.
+
+This plugin is tested and works with:
+
+* [[Gemini CLI|https://geminicli.com/]]
+* [[Claude Code|https://code.claude.com/docs/en/overview]]
+* [[Claude|https://claude.ai/]]
+* [[Simtheory|https://simtheory.ai/]]
+
+The plugin only supports server (Node.JS-hosted) versions of TiddlyWiki.
+
+The plugin defaults to ''read only'' mode. The update and delete tiddler tools are off by default.

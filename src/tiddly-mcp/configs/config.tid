@@ -1,0 +1,24 @@
+title: $:/plugins/rryan/tiddly-mcp/config
+tags: $:/tags/ControlPanel/SettingsTab
+caption: <<lingo Name $:/plugins/rryan/tiddly-mcp/language/>>
+
+\procedure lingo-base() $:/plugins/rryan/tiddly-mcp/language/
+
+<<lingo ConfigDescription>>
+
+---
+
+!! <<lingo Configs/PluginConfigs/Caption>>
+
+;<<lingo Configs/Enabled/Caption>>
+:<$checkbox tiddler="$:/plugins/rryan/tiddly-mcp/configs/enabled" field="text" checked="yes" unchecked=""> <<lingo Configs/Enabled/Description>></$checkbox>
+;<<lingo Configs/ReadOnly/Caption>>
+:<$checkbox tiddler="$:/plugins/rryan/tiddly-mcp/configs/read-only" field="text" checked="yes" unchecked=""> <<lingo Configs/ReadOnly/Description>></$checkbox>
+;<<lingo Configs/Port/Caption>>
+:<$edit-text tiddler="$:/plugins/rryan/tiddly-mcp/configs/port" tabindex=-1 focus=false cancelPopups="yes" fileDrop=no tag="input" />
+;<<lingo Configs/CorsOrigins/Caption>>
+:<$edit-text tiddler="$:/plugins/rryan/tiddly-mcp/configs/cors-origins" tabindex=-1 focus=false cancelPopups="yes" fileDrop=no tag="input" />
+;<<lingo Configs/DefaultContentType/Caption>>
+:<$edit-text tiddler="$:/plugins/rryan/tiddly-mcp/configs/default-content-type" tabindex=-1 focus=false cancelPopups="yes" fileDrop=no tag="input" />
+;<<lingo Configs/LogLevel/Caption>>
+:<$edit-text tiddler="$:/plugins/rryan/tiddly-mcp/configs/log-level" tabindex=-1 focus=false cancelPopups="yes" fileDrop=no tag="input" />

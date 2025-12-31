@@ -1,0 +1,12 @@
+{
+  "title": "$:/plugins/rryan/tiddly-mcp",
+  "author": "RJ Skerry-Ryan",
+  "description": "Model Context Protocol (MCP) server for TiddlyWiki - enables AI assistants to interact with your wiki.",
+  "core-version": ">=5.1.22",
+  "plugin-type": "plugin",
+  "platform": "server",
+  "version": "0.0.1",
+  "stability": "STABILITY_1_EXPERIMENTAL",
+  "list": "readme config tree",
+  "Modern.TiddlyDev#ExternalModules": "node:process node:events node:crypto node:url node:http node:path node:fs node:querystring node:buffer node:net node:zlib node:util node:stream"
+}
