@@ -10,6 +10,7 @@ const listTiddlersInputSchema = z.object({
   filter: z.string().optional().describe('TiddlyWiki filter expression (optional)'),
   limit: z.number().optional().describe('Maximum number of tiddlers to return'),
   includeSystem: z.boolean().optional().default(false).describe('Include system tiddlers (starting with $:/)'),
+  includeDetails: z.boolean().optional().default(false).describe('Include tiddler details instead of just titles'),
 });
 
 export const listTiddlersTool: MCPTool<typeof listTiddlersInputSchema> = {
@@ -17,7 +18,7 @@ export const listTiddlersTool: MCPTool<typeof listTiddlersInputSchema> = {
   description: 'List all tiddlers or filter them using a TiddlyWiki filter expression',
   inputSchema: listTiddlersInputSchema,
   handler: async (arguments_, wiki) => {
-    console.log(`[MCP] list_tiddlers filter=${arguments_.filter} includeSystem=${arguments_.includeSystem} limit=${arguments_.limit}`);
+    console.log(`[MCP] list_tiddlers filter=${arguments_.filter} includeSystem=${arguments_.includeSystem} limit=${arguments_.limit} includeDetails=${arguments_.includeDetails}`);
     try {
       let tiddlerTitles: string[];
 
@@ -42,6 +43,20 @@ export const listTiddlersTool: MCPTool<typeof listTiddlersInputSchema> = {
       // Sort alphabetically
       tiddlerTitles.sort();
 
+      let results: any;
+
+      if (arguments_.includeDetails) {
+        // Get full tiddler details (all fields, same as read_tiddler)
+        results = tiddlerTitles.map((title: string) => {
+          const tiddler = wiki.getTiddler(title);
+          if (!tiddler) return null;
+
+          return tiddler.fields;
+        }).filter((t: any) => t !== null);
+      } else {
+        results = tiddlerTitles;
+      }
+
       return {
         content: [
           {
@@ -49,7 +64,7 @@ export const listTiddlersTool: MCPTool<typeof listTiddlersInputSchema> = {
             text: JSON.stringify(
               {
                 count: tiddlerTitles.length,
-                tiddlers: tiddlerTitles,
+                tiddlers: results,
               },
               null,
               2,

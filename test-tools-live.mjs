@@ -149,7 +149,7 @@ async function testMCPServer() {
     const filterResult = await client.request({
       method: 'tools/call',
       params: {
-        name: 'filter_tiddlers',
+        name: 'list_tiddlers',
         arguments: {
           filter: '[tag[test]]',
         },
@@ -157,7 +157,7 @@ async function testMCPServer() {
     }, CallToolResultSchema);
     const filterData = JSON.parse(filterResult.content[0].text);
     console.log(`Filter found ${filterData.count} tiddlers with tag 'test':`);
-    filterData.results.forEach(title => {
+    filterData.tiddlers.forEach(title => {
       console.log(`  - ${title}`);
     });
     console.log();
