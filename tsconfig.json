@@ -6,7 +6,14 @@
     "baseUrl": "./",
     "noEmit": true,
     "typeRoots": ["node_modules/@types", "node_modules/tw5-typed"],
-    "lib": ["DOM", "ESNext"]
+    "lib": ["DOM", "ESNext"],
+    "module": "commonjs"
   },
-  "include": ["src", "*.json", "wiki/*.info", "*.mjs", "*.js", "src/**/*.d.ts"]
+  "include": ["src", "*.json", "wiki/*.info", "*.mjs", "*.js", "src/**/*.d.ts"],
+  "ts-node": {
+    "transpileOnly": true,
+    "compilerOptions": {
+      "module": "commonjs"
+    }
+  }
 }

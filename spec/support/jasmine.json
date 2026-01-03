@@ -1,0 +1,14 @@
+{
+  "spec_dir": "src/tiddly-mcp/mcp-server",
+  "spec_files": [
+    "**/__tests__/**/*.test.ts"
+  ],
+  "helpers": [
+    "helpers/**/*.?(m)js"
+  ],
+  "env": {
+    "stopSpecOnExpectationFailure": false,
+    "random": true,
+    "forbidDuplicateNames": true
+  }
+}

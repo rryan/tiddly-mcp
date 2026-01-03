@@ -17,6 +17,10 @@ concurrency:
 jobs:
   validate:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+      issues: write
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -57,14 +61,16 @@ jobs:
         run: pnpm run test
 
       - name: Build Plugins
-        run: pnpm run build:folder
+        run: pnpm run build:release
 
       - name: Upload Build Artifacts
         if: always()
         uses: actions/upload-artifact@v5
         with:
           name: build-artifacts
-          path: dist/
+          path: |
+            dist/tiddly-mcp.json
+            dist/tiddly-mcp.tar.gz
           retention-days: 5
 
       - name: Comment PR with Results

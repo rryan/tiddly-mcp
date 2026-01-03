@@ -11,17 +11,6 @@ on:
       - 'scripts/**'
       - '.vscode'
       - '.idea'
-  pull_request:
-    branches:
-      - master
-      - main
-    paths-ignore:
-      - 'README.md'
-      - 'wiki/**'
-      - 'public/**'
-      - '.scripts/**'
-      - '.vscode'
-      - '.idea'
 
 concurrency:
   group: release-ci-group
@@ -63,6 +52,9 @@ jobs:
 
       - name: Install Dependencies
         run: pnpm install
+
+      - name: Run Tests
+        run: pnpm run test
 
       - name: Build Plugins
         run: pnpm run build:release
