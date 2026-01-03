@@ -5,7 +5,6 @@
 import type { Server } from '@modelcontextprotocol/sdk/server/index.js';
 import type { MCPConfig, MCPTool, Wiki } from '../types';
 import { deleteTiddlerTool } from './delete-tiddler';
-import { filterTiddlersTool } from './filter-tiddlers';
 import { listTiddlersTool } from './list-tiddlers';
 import { readTiddlerTool } from './read-tiddler';
 import { searchTiddlersTool } from './search-tiddlers';
@@ -27,7 +26,6 @@ export function registerTools(server: Server, wiki: Wiki, config: MCPConfig): vo
     readTiddlerTool,
     listTiddlersTool,
     searchTiddlersTool,
-    filterTiddlersTool,
   ];
 
   if (!config.readOnly) {

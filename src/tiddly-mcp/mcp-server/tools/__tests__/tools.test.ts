@@ -4,7 +4,6 @@
 
 import type { Wiki } from '../../types';
 import { deleteTiddlerTool } from '../delete-tiddler';
-import { filterTiddlersTool } from '../filter-tiddlers';
 import { listTiddlersTool } from '../list-tiddlers';
 import { readTiddlerTool } from '../read-tiddler';
 import { searchTiddlersTool } from '../search-tiddlers';
@@ -347,7 +346,7 @@ describe('TiddlyWiki MCP Tools', () => {
     });
   });
 
-  describe('Filter Tiddlers Tool', () => {
+  describe('List Tiddlers Tool - Filter Support', () => {
     it('should execute basic filter', async () => {
       const wiki = new MockWiki([
         { title: 'T1', text: 'Content 1', tags: ['journal'] },
@@ -355,16 +354,16 @@ describe('TiddlyWiki MCP Tools', () => {
         { title: 'T3', text: 'Content 3', tags: ['note'] },
       ]);
 
-      const result = await filterTiddlersTool.handler(
+      const result = await listTiddlersTool.handler(
         { filter: '[tag[journal]]' },
         wiki,
       );
       const data = JSON.parse(result.content[0].text);
 
       expect(data.count).toBe(2);
-      expect(data.results).toContain('T1');
-      expect(data.results).toContain('T2');
-      expect(data.results).not.toContain('T3');
+      expect(data.tiddlers).toContain('T1');
+      expect(data.tiddlers).toContain('T2');
+      expect(data.tiddlers).not.toContain('T3');
     });
 
     it('should return tiddler titles by default', async () => {
@@ -372,14 +371,14 @@ describe('TiddlyWiki MCP Tools', () => {
         { title: 'T1', text: 'Content' },
       ]);
 
-      const result = await filterTiddlersTool.handler(
+      const result = await listTiddlersTool.handler(
         { filter: '[all[tiddlers]]', includeDetails: false },
         wiki,
       );
       const data = JSON.parse(result.content[0].text);
 
-      expect(Array.isArray(data.results)).toBe(true);
-      expect(typeof data.results[0]).toBe('string');
+      expect(Array.isArray(data.tiddlers)).toBe(true);
+      expect(typeof data.tiddlers[0]).toBe('string');
     });
 
     it('should return detailed info when requested', async () => {
@@ -392,16 +391,16 @@ describe('TiddlyWiki MCP Tools', () => {
         },
       ]);
 
-      const result = await filterTiddlersTool.handler(
+      const result = await listTiddlersTool.handler(
         { filter: '[all[tiddlers]]', includeDetails: true },
         wiki,
       );
       const data = JSON.parse(result.content[0].text);
 
-      expect(data.results[0].title).toBeDefined();
-      expect(data.results[0].text).toBeDefined();
-      expect(data.results[0].tags).toBeDefined();
-      expect(data.results[0].type).toBeDefined();
+      expect(data.tiddlers[0].title).toBeDefined();
+      expect(data.tiddlers[0].text).toBeDefined();
+      expect(data.tiddlers[0].tags).toBeDefined();
+      expect(data.tiddlers[0].type).toBeDefined();
     });
   });
 });

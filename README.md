@@ -18,8 +18,7 @@ This plugin provides the following tools to AI agents via MCP:
 
 | Name | Description | Arguments |
 | ---- | ----------- | --------- |
-| `list_tiddlers` | List all tiddlers or filter them using a [filter expression](https://tiddlywiki.com/static/Filters.html). | `filter`, `limit`, `includeSystem` |
-| `filter_tiddlers` | Filter tiddlers using a [filter expression](https://tiddlywiki.com/static/Filters.html). | `filter`, `includeDetails` |
+| `list_tiddlers` | List all tiddlers or filter them using a [filter expression](https://tiddlywiki.com/static/Filters.html). | `filter`, `limit`, `includeSystem`, `includeDetails` |
 | `read_tiddler` | Read a tiddler by title. | `title` |
 | `search_tiddlers` | Search for tiddlers containing specific text. | `query`, `field`, `caseSensitive` |
 | `write_tiddler` | Create or update a tiddler by title. | `title`, `text`, `tags`, `type`, `username` |
