@@ -2,9 +2,8 @@
  * Read tiddler tool - retrieve tiddler content and fields
  */
 
+import { z } from 'zod';
 import type { MCPTool } from '../types';
-
-const { z } = require('zod');
 
 const readTiddlerInputSchema = z.object({
   title: z.string().describe('Title of the tiddler to read'),
@@ -14,12 +13,12 @@ export const readTiddlerTool: MCPTool<typeof readTiddlerInputSchema> = {
   name: 'read_tiddler',
   description: 'Read a tiddler and return its content and fields',
   inputSchema: readTiddlerInputSchema,
-  handler: async (arguments_, wiki) => {
+  async handler(arguments_, wiki) {
     console.log(`[MCP] read_tiddler title=${arguments_.title}`);
     const tiddler = wiki.getTiddler(arguments_.title);
 
     if (!tiddler) {
-      return {
+      return Promise.resolve({
         content: [
           {
             type: 'text' as const,
@@ -27,16 +26,16 @@ export const readTiddlerTool: MCPTool<typeof readTiddlerInputSchema> = {
           },
         ],
         isError: true,
-      };
+      });
     }
 
-    return {
+    return Promise.resolve({
       content: [
         {
           type: 'text' as const,
           text: JSON.stringify(tiddler.fields, null, 2),
         },
       ],
-    };
+    });
   },
 };

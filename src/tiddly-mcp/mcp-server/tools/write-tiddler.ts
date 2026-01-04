@@ -2,9 +2,8 @@
  * Write tiddler tool - create or update a tiddler
  */
 
-import type { MCPTool } from '../types';
-
-const { z } = require('zod');
+import { z } from 'zod';
+import type { MCPTool, TiddlerFieldValue } from '../types';
 
 const writeTiddlerInputSchema = z.object({
   title: z.string().describe('Title of the tiddler'),
@@ -18,7 +17,8 @@ export const writeTiddlerTool: MCPTool<typeof writeTiddlerInputSchema> = {
   name: 'write_tiddler',
   description: 'Create or update a tiddler with the specified content and fields',
   inputSchema: writeTiddlerInputSchema,
-  handler: async (arguments_, wiki) => {
+  // eslint-disable-next-line @typescript-eslint/require-await
+  async handler(arguments_, wiki) {
     console.log(`[MCP] write_tiddler title=${arguments_.title}`);
     try {
       // Check if tiddler exists
@@ -30,12 +30,12 @@ export const writeTiddlerTool: MCPTool<typeof writeTiddlerInputSchema> = {
 
       const defaultType = wiki.getTiddlerText('$:/plugins/rryan/tiddly-mcp/configs/default-content-type', 'text/vnd.tiddlywiki');
 
-      const tiddlerFields: Record<string, any> = {
+      const tiddlerFields: Record<string, TiddlerFieldValue> = {
         title: arguments_.title,
         text: arguments_.text,
-        type: arguments_.type ? arguments_.type : defaultType,
-        created: isUpdate ? existingTiddler.fields.created : now,
-        creator: isUpdate ? existingTiddler.fields.creator : arguments_.username,
+        type: arguments_.type ?? defaultType,
+        created: existingTiddler ? existingTiddler.fields.created : now,
+        creator: existingTiddler ? existingTiddler.fields.creator : arguments_.username,
         modified: now,
         modifier: arguments_.username,
       };

@@ -2,6 +2,7 @@
  * Tool registration and request handling
  */
 
+/* eslint-disable @typescript-eslint/no-require-imports, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-deprecated */
 import type { Server } from '@modelcontextprotocol/sdk/server/index.js';
 import type { MCPConfig, MCPTool, Wiki } from '../types';
 import { deleteTiddlerTool } from './delete-tiddler';
@@ -16,6 +17,7 @@ const {
   ListToolsRequestSchema,
 } = require('@modelcontextprotocol/sdk/types.js');
 const { zodToJsonSchema } = require('zod-to-json-schema');
+/* eslint-enable @typescript-eslint/no-require-imports, @typescript-eslint/no-unsafe-assignment */
 
 /**
  * Register all tools with the MCP server
@@ -38,21 +40,22 @@ export function registerTools(server: Server, wiki: Wiki, config: MCPConfig): vo
   tools.forEach((tool) => toolMap.set(tool.name, tool));
 
   // Handle ListTools request
+  /* eslint-disable @typescript-eslint/no-unsafe-call, @typescript-eslint/require-await */
   server.setRequestHandler(ListToolsRequestSchema, async () => {
     console.log('[MCP] tools/list_tools');
     const toolsList = tools.map((tool) => {
       try {
         // Check if the schema is valid
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
         const jsonSchema = zodToJsonSchema(tool.inputSchema, {
           name: undefined,
           $refStrategy: 'none',
         });
 
-        const schemaString = JSON.stringify(jsonSchema);
-
         return {
           name: tool.name,
           description: tool.description,
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
           inputSchema: jsonSchema,
         };
       } catch (error) {
@@ -70,8 +73,10 @@ export function registerTools(server: Server, wiki: Wiki, config: MCPConfig): vo
     });
     return { tools: toolsList };
   });
+  /* eslint-enable @typescript-eslint/no-unsafe-call, @typescript-eslint/require-await */
 
   // Handle CallTool request
+  /* eslint-disable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-argument */
   server.setRequestHandler(CallToolRequestSchema, async (request) => {
     const { name, arguments: arguments_ } = request.params;
 
@@ -101,4 +106,6 @@ export function registerTools(server: Server, wiki: Wiki, config: MCPConfig): vo
       };
     }
   });
+  /* eslint-enable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-argument */
 }
+/* eslint-enable @typescript-eslint/no-deprecated */
