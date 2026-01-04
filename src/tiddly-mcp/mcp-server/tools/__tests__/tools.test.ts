@@ -98,8 +98,8 @@ class MockWiki implements Wiki {
     return typeof text === 'string' ? text : (defaultText ?? '');
   }
 
-  search(text: string, options?: Record<string, unknown>): Tiddler[] {
-    const results: Tiddler[] = [];
+  search(text: string, options?: Record<string, unknown>): string[] {
+    const results: string[] = [];
     this.tiddlers.forEach((tiddler) => {
       const field = typeof options?.field === 'string' ? options.field : undefined;
       const searchIn = field
@@ -111,7 +111,7 @@ class MockWiki implements Wiki {
       const content = caseSensitive ? searchIn : searchIn.toLowerCase();
 
       if (content.includes(query)) {
-        results.push(tiddler);
+        results.push(tiddler.fields.title);
       }
     });
     return results;
