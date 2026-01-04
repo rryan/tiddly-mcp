@@ -178,7 +178,8 @@ describe('TiddlyWiki MCP Tools', () => {
         wiki,
       );
 
-      expect(result.content[0].text).toContain('created');
+      const data = parseToolResponse(result.content[0].text);
+      expect((data.message as string)).toContain('created');
       expect(result.isError).toBeUndefined();
 
       const tiddler = wiki.getTiddler('NewTiddler');
@@ -217,7 +218,8 @@ describe('TiddlyWiki MCP Tools', () => {
         wiki,
       );
 
-      expect(result.content[0].text).toContain('updated');
+      const data = parseToolResponse(result.content[0].text);
+      expect((data.message as string)).toContain('updated');
 
       const tiddler = wiki.getTiddler('ExistingTiddler');
       expect(tiddler?.fields.text).toBe('Updated content');
@@ -259,7 +261,8 @@ describe('TiddlyWiki MCP Tools', () => {
 
       const result = await deleteTiddlerTool.handler({ title: 'ToDelete' }, wiki);
 
-      expect(result.content[0].text).toContain('deleted successfully');
+      const data = parseToolResponse(result.content[0].text);
+      expect((data.message as string)).toContain('deleted successfully');
       expect(result.isError).toBeUndefined();
       expect(wiki.getTiddler('ToDelete')).toBeUndefined();
     });

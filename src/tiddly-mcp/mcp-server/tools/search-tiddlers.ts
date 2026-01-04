@@ -25,10 +25,14 @@ export const searchTiddlersTool: MCPTool<typeof searchTiddlersInputSchema> = {
     console.log(`[MCP] search_tiddlers query=${arguments_.query} field=${arguments_.field} caseSensitive=${arguments_.caseSensitive}`);
     try {
       // Use TiddlyWiki's built-in search
-      const tiddlerTitles = wiki.search(arguments_.query, {
+      const results = wiki.search(arguments_.query, {
         field: arguments_.field,
         caseSensitive: arguments_.caseSensitive,
       });
+
+      // Extract tiddler titles from results
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+      const tiddlerTitles = results.map((result: any) => (result.title || result) as string);
 
       return {
         content: [
