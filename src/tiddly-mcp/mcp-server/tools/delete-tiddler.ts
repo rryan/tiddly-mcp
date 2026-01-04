@@ -28,21 +28,20 @@ export const deleteTiddlerTool: MCPTool<typeof deleteTiddlerInputSchema, typeof 
       const tiddler = wiki.getTiddler(arguments_.title);
 
       if (!tiddler) {
+        const errorData = {
+          success: false,
+          message: `Tiddler "${arguments_.title}" not found`,
+          title: arguments_.title,
+        };
+
         return {
           content: [
             {
               type: 'text' as const,
-              text: JSON.stringify(
-                {
-                  success: false,
-                  message: `Tiddler "${arguments_.title}" not found`,
-                  title: arguments_.title,
-                },
-                null,
-                2,
-              ),
+              text: JSON.stringify(errorData, null, 2),
             },
           ],
+          structuredContent: errorData,
           isError: true,
         };
       }
@@ -50,38 +49,36 @@ export const deleteTiddlerTool: MCPTool<typeof deleteTiddlerInputSchema, typeof 
       // Delete the tiddler
       wiki.deleteTiddler(arguments_.title);
 
+      const successData = {
+        success: true,
+        message: `Tiddler "${arguments_.title}" deleted successfully`,
+        title: arguments_.title,
+      };
+
       return {
         content: [
           {
             type: 'text' as const,
-            text: JSON.stringify(
-              {
-                success: true,
-                message: `Tiddler "${arguments_.title}" deleted successfully`,
-                title: arguments_.title,
-              },
-              null,
-              2,
-            ),
+            text: JSON.stringify(successData, null, 2),
           },
         ],
+        structuredContent: successData,
       };
     } catch (error) {
+      const errorData = {
+        success: false,
+        message: `Error deleting tiddler: ${error instanceof Error ? error.message : String(error)}`,
+        title: arguments_.title,
+      };
+
       return {
         content: [
           {
             type: 'text' as const,
-            text: JSON.stringify(
-              {
-                success: false,
-                message: `Error deleting tiddler: ${error instanceof Error ? error.message : String(error)}`,
-                title: arguments_.title,
-              },
-              null,
-              2,
-            ),
+            text: JSON.stringify(errorData, null, 2),
           },
         ],
+        structuredContent: errorData,
         isError: true,
       };
     }

@@ -56,40 +56,38 @@ export const writeTiddlerTool: MCPTool<typeof writeTiddlerInputSchema, typeof wr
       wiki.addTiddler(tiddlerFields);
 
       const operation = isUpdate ? 'updated' : 'created';
+      const successData = {
+        success: true,
+        message: `Tiddler "${arguments_.title}" ${operation} successfully`,
+        title: arguments_.title,
+        operation,
+      };
+
       return {
         content: [
           {
             type: 'text' as const,
-            text: JSON.stringify(
-              {
-                success: true,
-                message: `Tiddler "${arguments_.title}" ${operation} successfully`,
-                title: arguments_.title,
-                operation,
-              },
-              null,
-              2,
-            ),
+            text: JSON.stringify(successData, null, 2),
           },
         ],
+        structuredContent: successData,
       };
     } catch (error) {
+      const errorData = {
+        success: false,
+        message: `Error writing tiddler: ${error instanceof Error ? error.message : String(error)}`,
+        title: arguments_.title,
+        operation: 'created' as const, // Default to created for error case
+      };
+
       return {
         content: [
           {
             type: 'text' as const,
-            text: JSON.stringify(
-              {
-                success: false,
-                message: `Error writing tiddler: ${error instanceof Error ? error.message : String(error)}`,
-                title: arguments_.title,
-                operation: 'created', // Default to created for error case
-              },
-              null,
-              2,
-            ),
+            text: JSON.stringify(errorData, null, 2),
           },
         ],
+        structuredContent: errorData,
         isError: true,
       };
     }
