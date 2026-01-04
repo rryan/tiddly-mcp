@@ -3,66 +3,88 @@
  */
 
 import { createMCPServer } from '../server';
-import type { MCPConfig, Wiki } from '../types';
+import type { MCPConfig, Tiddler, TiddlerFieldValue, Wiki } from '../types';
+
+// Mock tiddler data structure
+interface MockTiddlerData {
+  fields: Record<string, TiddlerFieldValue>;
+  getFieldString: (field: string) => string;
+  getFieldList: (field: string) => string[];
+}
 
 // Mock Wiki for integration testing
 class TestWiki implements Wiki {
-  private data = new Map<string, any>();
+  private data = new Map<string, MockTiddlerData>();
 
   constructor() {
     // Add some test data
+    const testFields: Record<string, TiddlerFieldValue> = {
+      title: 'TestTiddler',
+      text: 'Test content',
+      tags: ['test'],
+    };
     this.data.set('TestTiddler', {
-      fields: {
-        title: 'TestTiddler',
-        text: 'Test content',
-        tags: ['test'],
+      fields: testFields,
+      getFieldString: (field: string) => {
+        const value = testFields[field];
+        return typeof value === 'string' ? value : '';
       },
-      getFieldString: (field: string) => this.data.get('TestTiddler')?.fields[field] || '',
-      getFieldList: (field: string) => this.data.get('TestTiddler')?.fields[field] || [],
+      getFieldList: (field: string) => {
+        const value = testFields[field];
+        return Array.isArray(value) ? value : [];
+      },
     });
   }
 
-  getTiddler(title: string) {
+  getTiddler(title: string): Tiddler | undefined {
     return this.data.get(title);
   }
 
-  addTiddler(tiddler: any) {
-    this.data.set(tiddler.title, {
-      fields: tiddler,
-      getFieldString: (field: string) => tiddler[field] || '',
-      getFieldList: (field: string) => tiddler[field] || [],
+  addTiddler(tiddler: Tiddler | Record<string, TiddlerFieldValue>): void {
+    const fields: Record<string, TiddlerFieldValue> = 'fields' in tiddler ? tiddler.fields : tiddler;
+    const titleValue = typeof fields.title === 'string' ? fields.title : '';
+    const fieldsForClosure = fields;
+    this.data.set(titleValue, {
+      fields: fieldsForClosure,
+      getFieldString: (field: string) => {
+        const value = fieldsForClosure[field];
+        return typeof value === 'string' ? value : '';
+      },
+      getFieldList: (field: string) => {
+        const value = fieldsForClosure[field];
+        return Array.isArray(value) ? value : [];
+      },
     });
   }
 
-  deleteTiddler(title: string) {
+  deleteTiddler(title: string): void {
     this.data.delete(title);
   }
 
-  filterTiddlers(filter: string) {
+  filterTiddlers(_filter: string): string[] {
     return Array.from(this.data.keys());
   }
 
-  getTiddlers() {
+  getTiddlers(): string[] {
     return Array.from(this.data.keys());
   }
 
-  getTiddlerText(title: string, defaultText?: string) {
-    return this.data.get(title)?.fields.text || defaultText || '';
+  getTiddlerText(title: string, defaultText?: string): string {
+    const text = this.data.get(title)?.fields.text;
+    return typeof text === 'string' ? text : (defaultText ?? '');
   }
 
-  search(text: string) {
-    const results: any[] = [];
-    this.data.forEach((tiddler, title) => {
-      if (JSON.stringify(tiddler.fields).toLowerCase().includes(text.toLowerCase())) {
-        results.push({ title });
-      }
+  search(_text: string): Tiddler[] {
+    const results: Tiddler[] = [];
+    this.data.forEach((tiddler) => {
+      results.push(tiddler);
     });
     return results;
   }
 }
 
 describe('MCP Server Integration', () => {
-  let server: any;
+  let server: ReturnType<typeof createMCPServer>;
   let wiki: Wiki;
 
   beforeEach(() => {
@@ -77,8 +99,9 @@ describe('MCP Server Integration', () => {
   });
 
   it('should have error handler', () => {
-    expect(server.onerror).toBeDefined();
-    expect(typeof server.onerror).toBe('function');
+    const serverWithError = server as { onerror?: unknown };
+    expect(serverWithError.onerror).toBeDefined();
+    expect(typeof serverWithError.onerror).toBe('function');
   });
 
   it('should register all tools', () => {

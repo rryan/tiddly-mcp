@@ -2,55 +2,85 @@
  * Comprehensive unit tests for TiddlyWiki MCP tools
  */
 
-import type { Wiki } from '../../types';
+import type { Tiddler, TiddlerFieldValue, Wiki } from '../../types';
 import { deleteTiddlerTool } from '../delete-tiddler';
 import { listTiddlersTool } from '../list-tiddlers';
 import { readTiddlerTool } from '../read-tiddler';
 import { searchTiddlersTool } from '../search-tiddlers';
 import { writeTiddlerTool } from '../write-tiddler';
 
+// Mock tiddler data structure
+interface MockTiddlerData {
+  fields: Record<string, TiddlerFieldValue>;
+  getFieldString: (field: string) => string;
+  getFieldList: (field: string) => string[];
+}
+
+/**
+ * Parse JSON response from tool result
+ */
+function parseToolResponse(text: string): Record<string, unknown> {
+  return JSON.parse(text) as Record<string, unknown>;
+}
+
 // Mock Wiki implementation for testing
 class MockWiki implements Wiki {
-  private tiddlers: Map<string, any> = new Map();
+  private tiddlers: Map<string, MockTiddlerData> = new Map();
 
-  constructor(initialTiddlers: any[] = []) {
-    initialTiddlers.forEach(tiddler => {
-      this.tiddlers.set(tiddler.title, {
-        fields: tiddler,
-        getFieldString: (field: string) => tiddler[field] || '',
-        getFieldList: (field: string) => tiddler[field] || [],
+  constructor(initialTiddlers: Array<Record<string, TiddlerFieldValue>> = []) {
+    initialTiddlers.forEach(tiddlerFields => {
+      const title = typeof tiddlerFields.title === 'string' ? tiddlerFields.title : '';
+      this.tiddlers.set(title, {
+        fields: tiddlerFields,
+        getFieldString: (field: string) => {
+          const value = tiddlerFields[field];
+          return typeof value === 'string' ? value : '';
+        },
+        getFieldList: (field: string) => {
+          const value = tiddlerFields[field];
+          return Array.isArray(value) ? value : [];
+        },
       });
     });
   }
 
-  getTiddler(title: string) {
+  getTiddler(title: string): Tiddler | undefined {
     return this.tiddlers.get(title);
   }
 
-  addTiddler(tiddler: any) {
-    const title = tiddler.title;
+  addTiddler(tiddler: Tiddler | Record<string, TiddlerFieldValue>): void {
+    const fields: Record<string, TiddlerFieldValue> = 'fields' in tiddler ? tiddler.fields : tiddler;
+    const title = typeof fields.title === 'string' ? fields.title : '';
+    const fieldsForClosure = fields;
     this.tiddlers.set(title, {
-      fields: tiddler,
-      getFieldString: (field: string) => tiddler[field] || '',
-      getFieldList: (field: string) => tiddler[field] || [],
+      fields: fieldsForClosure,
+      getFieldString: (field: string) => {
+        const value = fieldsForClosure[field];
+        return typeof value === 'string' ? value : '';
+      },
+      getFieldList: (field: string) => {
+        const value = fieldsForClosure[field];
+        return Array.isArray(value) ? value : [];
+      },
     });
   }
 
-  deleteTiddler(title: string) {
+  deleteTiddler(title: string): void {
     this.tiddlers.delete(title);
   }
 
-  filterTiddlers(filter: string) {
+  filterTiddlers(filter: string): string[] {
     // Simple mock implementation
     const titles = Array.from(this.tiddlers.keys());
 
     if (filter.includes('[tag[')) {
-      const tagMatch = filter.match(/\[tag\[([^\]]+)\]\]/);
+      const tagMatch = /\[tag\[([^\]]+)\]\]/.exec(filter);
       if (tagMatch) {
         const tag = tagMatch[1];
         return titles.filter(title => {
           const tiddler = this.tiddlers.get(title);
-          return tiddler?.fields.tags?.includes(tag);
+          const tags = tiddler?.fields.tags;
+          return Array.isArray(tags) && tags.includes(tag);
         });
       }
     }
@@ -58,27 +88,30 @@ class MockWiki implements Wiki {
     return titles;
   }
 
-  getTiddlers() {
+  getTiddlers(): string[] {
     return Array.from(this.tiddlers.keys());
   }
 
-  getTiddlerText(title: string, defaultText?: string) {
+  getTiddlerText(title: string, defaultText?: string): string {
     const tiddler = this.tiddlers.get(title);
-    return tiddler?.fields.text || defaultText || '';
+    const text = tiddler?.fields.text;
+    return typeof text === 'string' ? text : (defaultText ?? '');
   }
 
-  search(text: string, options?: any) {
-    const results: any[] = [];
-    this.tiddlers.forEach((tiddler, title) => {
-      const searchIn = options?.field
-        ? tiddler.fields[options.field] || ''
+  search(text: string, options?: Record<string, unknown>): string[] {
+    const results: string[] = [];
+    this.tiddlers.forEach((tiddler) => {
+      const field = typeof options?.field === 'string' ? options.field : undefined;
+      const searchIn = field
+        ? String(tiddler.fields[field] ?? '')
         : JSON.stringify(tiddler.fields);
 
-      const query = options?.caseSensitive ? text : text.toLowerCase();
-      const content = options?.caseSensitive ? searchIn : searchIn.toLowerCase();
+      const caseSensitive = options?.caseSensitive === true;
+      const query = caseSensitive ? text : text.toLowerCase();
+      const content = caseSensitive ? searchIn : searchIn.toLowerCase();
 
       if (content.includes(query)) {
-        results.push({ title });
+        results.push(tiddler.fields.title);
       }
     });
     return results;
@@ -98,7 +131,7 @@ describe('TiddlyWiki MCP Tools', () => {
       ]);
 
       const result = await readTiddlerTool.handler({ title: 'TestTiddler' }, wiki);
-      const data = JSON.parse(result.content[0].text);
+      const data = parseToolResponse(result.content[0].text);
 
       expect(data.title).toBe('TestTiddler');
       expect(data.text).toBe('This is test content');
@@ -124,7 +157,7 @@ describe('TiddlyWiki MCP Tools', () => {
       ]);
 
       const result = await readTiddlerTool.handler({ title: '$:/config/test' }, wiki);
-      const data = JSON.parse(result.content[0].text);
+      const data = parseToolResponse(result.content[0].text);
 
       expect(data.title).toBe('$:/config/test');
       expect(data.text).toBe('System config');
@@ -249,7 +282,7 @@ describe('TiddlyWiki MCP Tools', () => {
       ]);
 
       const result = await listTiddlersTool.handler({}, wiki);
-      const data = JSON.parse(result.content[0].text);
+      const data = parseToolResponse(result.content[0].text);
 
       expect(data.count).toBe(3);
       expect(data.tiddlers).toContain('Tiddler1');
@@ -264,7 +297,7 @@ describe('TiddlyWiki MCP Tools', () => {
       ]);
 
       const result = await listTiddlersTool.handler({}, wiki);
-      const data = JSON.parse(result.content[0].text);
+      const data = parseToolResponse(result.content[0].text);
 
       expect(data.tiddlers).toContain('Regular');
       expect(data.tiddlers).not.toContain('$:/system');
@@ -277,7 +310,7 @@ describe('TiddlyWiki MCP Tools', () => {
       ]);
 
       const result = await listTiddlersTool.handler({ includeSystem: true }, wiki);
-      const data = JSON.parse(result.content[0].text);
+      const data = parseToolResponse(result.content[0].text);
 
       expect(data.tiddlers).toContain('Regular');
       expect(data.tiddlers).toContain('$:/system');
@@ -292,7 +325,7 @@ describe('TiddlyWiki MCP Tools', () => {
       ]);
 
       const result = await listTiddlersTool.handler({ limit: 2 }, wiki);
-      const data = JSON.parse(result.content[0].text);
+      const data = parseToolResponse(result.content[0].text);
 
       expect(data.count).toBe(2);
       expect(data.tiddlers.length).toBe(2);
@@ -308,7 +341,7 @@ describe('TiddlyWiki MCP Tools', () => {
       ]);
 
       const result = await searchTiddlersTool.handler({ query: 'test' }, wiki);
-      const data = JSON.parse(result.content[0].text);
+      const data = parseToolResponse(result.content[0].text);
 
       expect(data.count).toBe(2);
       expect(data.results).toContain('Match1');
@@ -327,7 +360,7 @@ describe('TiddlyWiki MCP Tools', () => {
         { query: 'TEST', caseSensitive: true },
         wiki,
       );
-      const data = JSON.parse(result.content[0].text);
+      const data = parseToolResponse(result.content[0].text);
 
       expect(data.results).toContain('Upper');
       expect(data.results).not.toContain('Lower');
@@ -339,7 +372,7 @@ describe('TiddlyWiki MCP Tools', () => {
       ]);
 
       const result = await searchTiddlersTool.handler({ query: 'nomatch' }, wiki);
-      const data = JSON.parse(result.content[0].text);
+      const data = parseToolResponse(result.content[0].text);
 
       expect(data.count).toBe(0);
       expect(data.results).toEqual([]);
@@ -358,7 +391,7 @@ describe('TiddlyWiki MCP Tools', () => {
         { filter: '[tag[journal]]' },
         wiki,
       );
-      const data = JSON.parse(result.content[0].text);
+      const data = parseToolResponse(result.content[0].text);
 
       expect(data.count).toBe(2);
       expect(data.tiddlers).toContain('T1');
@@ -375,7 +408,7 @@ describe('TiddlyWiki MCP Tools', () => {
         { filter: '[all[tiddlers]]', includeDetails: false },
         wiki,
       );
-      const data = JSON.parse(result.content[0].text);
+      const data = parseToolResponse(result.content[0].text);
 
       expect(Array.isArray(data.tiddlers)).toBe(true);
       expect(typeof data.tiddlers[0]).toBe('string');
@@ -395,12 +428,13 @@ describe('TiddlyWiki MCP Tools', () => {
         { filter: '[all[tiddlers]]', includeDetails: true },
         wiki,
       );
-      const data = JSON.parse(result.content[0].text);
+      const data = parseToolResponse(result.content[0].text);
+      const tiddlers = data.tiddlers as Array<Record<string, unknown>>;
 
-      expect(data.tiddlers[0].title).toBeDefined();
-      expect(data.tiddlers[0].text).toBeDefined();
-      expect(data.tiddlers[0].tags).toBeDefined();
-      expect(data.tiddlers[0].type).toBeDefined();
+      expect(tiddlers[0]?.title).toBeDefined();
+      expect(tiddlers[0]?.text).toBeDefined();
+      expect(tiddlers[0]?.tags).toBeDefined();
+      expect(tiddlers[0]?.type).toBeDefined();
     });
   });
 });

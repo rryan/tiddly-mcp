@@ -2,9 +2,8 @@
  * Search tiddlers tool - search for tiddlers by text content
  */
 
-import type { MCPTool } from '../types';
-
-const { z } = require('zod');
+import { z } from 'zod';
+import type { MCPTool, Tiddler } from '../types';
 
 const searchTiddlersInputSchema = z.object({
   query: z.string().describe('Search query text'),
@@ -21,17 +20,15 @@ export const searchTiddlersTool: MCPTool<typeof searchTiddlersInputSchema> = {
     count: z.number(),
     results: z.array(z.string()),
   }),
-  handler: async (arguments_, wiki) => {
+  // eslint-disable-next-line @typescript-eslint/require-await
+  async handler(arguments_, wiki) {
     console.log(`[MCP] search_tiddlers query=${arguments_.query} field=${arguments_.field} caseSensitive=${arguments_.caseSensitive}`);
     try {
       // Use TiddlyWiki's built-in search
-      const results = wiki.search(arguments_.query, {
+      const tiddlerTitles = wiki.search(arguments_.query, {
         field: arguments_.field,
         caseSensitive: arguments_.caseSensitive,
       });
-
-      // Extract tiddler titles from results
-      const tiddlerTitles = results.map((result: any) => result.title || result);
 
       return {
         content: [

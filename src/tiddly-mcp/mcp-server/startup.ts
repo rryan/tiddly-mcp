@@ -6,12 +6,18 @@
 // CRITICAL: Polyfills MUST be inline here, before ANY imports
 // ESBuild bundles everything, so imported polyfills don't run early enough
 if (typeof global === 'undefined') {
-  (globalThis as any).global = globalThis;
+  (globalThis as Record<string, unknown>).global = globalThis;
+}
+
+interface AbortSignal {
+  aborted: boolean;
+  addEventListener: () => void;
+  removeEventListener: () => void;
 }
 
 if (typeof AbortController === 'undefined') {
-  (globalThis as any).AbortController = class AbortController {
-    signal: any;
+  (globalThis as Record<string, unknown>).AbortController = class AbortController {
+    signal: AbortSignal;
     constructor() {
       this.signal = {
         aborted: false,
@@ -19,7 +25,7 @@ if (typeof AbortController === 'undefined') {
         removeEventListener: () => {},
       };
     }
-    abort() {
+    abort(): void {
       this.signal.aborted = true;
     }
   };
@@ -32,7 +38,8 @@ import type { MCPConfig, Wiki } from './types';
 /**
  * Startup function called by TiddlyWiki
  */
-function startup() {
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+function startup(): void {
   // Check if running in Node.js environment
   if (!$tw.node) {
     console.log('[MCP] Not running in Node.js environment, skipping MCP server');
@@ -43,7 +50,7 @@ function startup() {
   const config: MCPConfig = {
     enabled: $tw.wiki.getTiddlerText('$:/plugins/rryan/tiddly-mcp/configs/enabled', 'yes') === 'yes',
     readOnly: $tw.wiki.getTiddlerText('$:/plugins/rryan/tiddly-mcp/configs/read-only', 'yes') === 'yes',
-    port: parseInt($tw.wiki.getTiddlerText('$:/plugins/rryan/tiddly-mcp/configs/port', '3100'), 10),
+    port: Number.parseInt($tw.wiki.getTiddlerText('$:/plugins/rryan/tiddly-mcp/configs/port', '3100'), 10),
     corsOrigins: parseCorsOrigins($tw.wiki.getTiddlerText('$:/plugins/rryan/tiddly-mcp/configs/cors-origins', '*')),
     defaultContentType: $tw.wiki.getTiddlerText('$:/plugins/rryan/tiddly-mcp/configs/default-content-type', 'text/vnd.tiddlywiki'),
     logLevel: ($tw.wiki.getTiddlerText('$:/plugins/rryan/tiddly-mcp/configs/log-level', 'info') as MCPConfig['logLevel']),
@@ -67,7 +74,7 @@ function startup() {
     const httpServer = createHTTPServer(mcpServer, config);
 
     // Store server instance for cleanup
-    ($tw as any).mcpServer = {
+    $tw.mcpServer = {
       mcp: mcpServer,
       http: httpServer,
     };
@@ -77,6 +84,7 @@ function startup() {
     console.error('[MCP] Failed to initialize MCP Server:', error);
   }
 }
+/* eslint-enable @typescript-eslint/no-unsafe-assignment */
 
 /**
  * Parse CORS origins from config string
@@ -96,10 +104,12 @@ function parseCorsOrigins(originsString: string): string[] {
 declare global {
   const $tw: {
     node: boolean;
-    wiki: any;
+    wiki: {
+      getTiddlerText: (title: string, defaultText?: string) => string;
+    };
     mcpServer?: {
-      mcp: any;
-      http: any;
+      mcp: unknown;
+      http: unknown;
     };
   };
 }

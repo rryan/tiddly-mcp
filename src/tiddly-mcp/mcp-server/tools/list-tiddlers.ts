@@ -2,9 +2,8 @@
  * List tiddlers tool - list all tiddlers or filter by criteria
  */
 
-import type { MCPTool } from '../types';
-
-const { z } = require('zod');
+import { z } from 'zod';
+import type { MCPTool, TiddlerFieldValue } from '../types';
 
 const listTiddlersInputSchema = z.object({
   filter: z.string().optional().describe('TiddlyWiki filter expression (optional)'),
@@ -24,7 +23,8 @@ export const listTiddlersTool: MCPTool<typeof listTiddlersInputSchema> = {
       z.array(z.record(z.any()))
     ]),
   }),
-  handler: async (arguments_, wiki) => {
+  // eslint-disable-next-line @typescript-eslint/require-await
+  async handler(arguments_, wiki) {
     console.log(`[MCP] list_tiddlers filter=${arguments_.filter} includeSystem=${arguments_.includeSystem} limit=${arguments_.limit} includeDetails=${arguments_.includeDetails}`);
     try {
       let tiddlerTitles: string[];
@@ -50,7 +50,7 @@ export const listTiddlersTool: MCPTool<typeof listTiddlersInputSchema> = {
       // Sort alphabetically
       tiddlerTitles.sort();
 
-      let results: any;
+      let results: string[] | Array<Record<string, TiddlerFieldValue>>;
 
       if (arguments_.includeDetails) {
         // Get full tiddler details (all fields, same as read_tiddler)
@@ -59,7 +59,7 @@ export const listTiddlersTool: MCPTool<typeof listTiddlersInputSchema> = {
           if (!tiddler) return null;
 
           return tiddler.fields;
-        }).filter((t: any) => t !== null);
+        }).filter((t): t is Record<string, TiddlerFieldValue> => t !== null);
       } else {
         results = tiddlerTitles;
       }
