@@ -48,6 +48,7 @@ export const readTiddlerTool: MCPTool<typeof readTiddlerInputSchema, typeof read
           text: JSON.stringify(tiddler.fields, null, 2),
         },
       ],
+      structuredContent: tiddler.fields as Record<string, unknown>,
     });
   },
 };

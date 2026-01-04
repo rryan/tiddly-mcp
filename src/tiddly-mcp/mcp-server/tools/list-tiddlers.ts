@@ -77,20 +77,19 @@ export const listTiddlersTool: MCPTool<typeof listTiddlersInputSchema, typeof li
         results = tiddlerTitles;
       }
 
+      const resultData = {
+        count: tiddlerTitles.length,
+        tiddlers: results,
+      };
+
       return {
         content: [
           {
             type: 'text' as const,
-            text: JSON.stringify(
-              {
-                count: tiddlerTitles.length,
-                tiddlers: results,
-              },
-              null,
-              2,
-            ),
+            text: JSON.stringify(resultData, null, 2),
           },
         ],
+        structuredContent: resultData as Record<string, unknown>,
       };
     } catch (error) {
       return {

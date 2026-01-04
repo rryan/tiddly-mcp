@@ -66,5 +66,6 @@ export interface ToolResult {
     type: 'text';
     text: string;
   }>;
+  structuredContent?: Record<string, unknown>;
   isError?: boolean;
 }

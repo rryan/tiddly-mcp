@@ -32,21 +32,20 @@ export const searchTiddlersTool: MCPTool<typeof searchTiddlersInputSchema, typeo
         caseSensitive: arguments_.caseSensitive,
       });
 
+      const resultData = {
+        query: arguments_.query,
+        count: tiddlerTitles.length,
+        results: tiddlerTitles,
+      };
+
       return {
         content: [
           {
             type: 'text' as const,
-            text: JSON.stringify(
-              {
-                query: arguments_.query,
-                count: tiddlerTitles.length,
-                results: tiddlerTitles,
-              },
-              null,
-              2,
-            ),
+            text: JSON.stringify(resultData, null, 2),
           },
         ],
+        structuredContent: resultData,
       };
     } catch (error) {
       return {
