@@ -5,24 +5,29 @@
 import type { z } from 'zod';
 
 /**
+ * TiddlyWiki field value type
+ */
+export type TiddlerFieldValue = string | string[] | number | boolean | undefined;
+
+/**
  * TiddlyWiki interface
- * Using any for now since tw5-typed types may not be complete
+ * Using unknown for now since tw5-typed types may not be complete
  */
 export interface Wiki {
   getTiddler(title: string): Tiddler | undefined;
-  addTiddler(tiddler: Tiddler | Record<string, any>): void;
+  addTiddler(tiddler: Tiddler | Record<string, TiddlerFieldValue>): void;
   deleteTiddler(title: string): void;
-  filterTiddlers(filter: string, widget?: any, source?: any): string[];
+  filterTiddlers(filter: string, widget?: unknown, source?: unknown): string[];
   getTiddlers(): string[];
   getTiddlerText(title: string, defaultText?: string): string;
-  search(text: string, options?: any): any[];
+  search(text: string, options?: Record<string, unknown>): Tiddler[];
 }
 
 /**
  * TiddlyWiki Tiddler interface
  */
 export interface Tiddler {
-  fields: Record<string, any>;
+  fields: Record<string, TiddlerFieldValue>;
   getFieldString(field: string): string;
   getFieldList(field: string): string[];
 }
@@ -34,7 +39,7 @@ export interface MCPTool<T extends z.ZodType = z.ZodType> {
   name: string;
   description: string;
   inputSchema: T;
-  handler: (arguments_: z.infer<T>, wiki: Wiki) => Promise<any>;
+  handler: (arguments_: z.infer<T>, wiki: Wiki) => Promise<ToolResult>;
 }
 
 /**
