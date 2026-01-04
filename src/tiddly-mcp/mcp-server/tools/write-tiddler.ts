@@ -13,10 +13,18 @@ const writeTiddlerInputSchema = z.object({
   username: z.string().default('tiddly-mcp').describe('Username of the agent creating or updating the tiddler. AI agents should use their name in lowercase.'),
 });
 
-export const writeTiddlerTool: MCPTool<typeof writeTiddlerInputSchema> = {
+const writeTiddlerOutputSchema = z.object({
+  success: z.boolean().describe('Whether the write operation was successful'),
+  message: z.string().describe('Human-readable message describing the result of the operation'),
+  title: z.string().describe('Title of the tiddler that was created or updated'),
+  operation: z.enum(['created', 'updated']).describe('Whether the tiddler was created or updated'),
+}).describe('Result of the tiddler write operation');
+
+export const writeTiddlerTool: MCPTool<typeof writeTiddlerInputSchema, typeof writeTiddlerOutputSchema> = {
   name: 'write_tiddler',
   description: 'Create or update a tiddler with the specified content and fields',
   inputSchema: writeTiddlerInputSchema,
+  outputSchema: writeTiddlerOutputSchema,
   // eslint-disable-next-line @typescript-eslint/require-await
   async handler(arguments_, wiki) {
     console.log(`[MCP] write_tiddler title=${arguments_.title}`);
@@ -47,11 +55,21 @@ export const writeTiddlerTool: MCPTool<typeof writeTiddlerInputSchema> = {
       // Create/update the tiddler
       wiki.addTiddler(tiddlerFields);
 
+      const operation = isUpdate ? 'updated' : 'created';
       return {
         content: [
           {
             type: 'text' as const,
-            text: `Tiddler "${arguments_.title}" ${isUpdate ? 'updated' : 'created'} successfully`,
+            text: JSON.stringify(
+              {
+                success: true,
+                message: `Tiddler "${arguments_.title}" ${operation} successfully`,
+                title: arguments_.title,
+                operation,
+              },
+              null,
+              2,
+            ),
           },
         ],
       };
@@ -60,7 +78,16 @@ export const writeTiddlerTool: MCPTool<typeof writeTiddlerInputSchema> = {
         content: [
           {
             type: 'text' as const,
-            text: `Error writing tiddler: ${error instanceof Error ? error.message : String(error)}`,
+            text: JSON.stringify(
+              {
+                success: false,
+                message: `Error writing tiddler: ${error instanceof Error ? error.message : String(error)}`,
+                title: arguments_.title,
+                operation: 'created', // Default to created for error case
+              },
+              null,
+              2,
+            ),
           },
         ],
         isError: true,

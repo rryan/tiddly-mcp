@@ -9,10 +9,17 @@ const deleteTiddlerInputSchema = z.object({
   title: z.string().describe('Title of the tiddler to delete'),
 });
 
-export const deleteTiddlerTool: MCPTool<typeof deleteTiddlerInputSchema> = {
+const deleteTiddlerOutputSchema = z.object({
+  success: z.boolean().describe('Whether the deletion was successful'),
+  message: z.string().describe('Human-readable message describing the result of the deletion'),
+  title: z.string().describe('Title of the tiddler that was deleted'),
+}).describe('Result of the tiddler deletion operation');
+
+export const deleteTiddlerTool: MCPTool<typeof deleteTiddlerInputSchema, typeof deleteTiddlerOutputSchema> = {
   name: 'delete_tiddler',
   description: 'Delete a tiddler from the wiki',
   inputSchema: deleteTiddlerInputSchema,
+  outputSchema: deleteTiddlerOutputSchema,
   // eslint-disable-next-line @typescript-eslint/require-await
   async handler(arguments_, wiki) {
     console.log(`[MCP] delete_tiddler title=${arguments_.title}`);
@@ -25,7 +32,15 @@ export const deleteTiddlerTool: MCPTool<typeof deleteTiddlerInputSchema> = {
           content: [
             {
               type: 'text' as const,
-              text: `Tiddler "${arguments_.title}" not found`,
+              text: JSON.stringify(
+                {
+                  success: false,
+                  message: `Tiddler "${arguments_.title}" not found`,
+                  title: arguments_.title,
+                },
+                null,
+                2,
+              ),
             },
           ],
           isError: true,
@@ -39,7 +54,15 @@ export const deleteTiddlerTool: MCPTool<typeof deleteTiddlerInputSchema> = {
         content: [
           {
             type: 'text' as const,
-            text: `Tiddler "${arguments_.title}" deleted successfully`,
+            text: JSON.stringify(
+              {
+                success: true,
+                message: `Tiddler "${arguments_.title}" deleted successfully`,
+                title: arguments_.title,
+              },
+              null,
+              2,
+            ),
           },
         ],
       };
@@ -48,7 +71,15 @@ export const deleteTiddlerTool: MCPTool<typeof deleteTiddlerInputSchema> = {
         content: [
           {
             type: 'text' as const,
-            text: `Error deleting tiddler: ${error instanceof Error ? error.message : String(error)}`,
+            text: JSON.stringify(
+              {
+                success: false,
+                message: `Error deleting tiddler: ${error instanceof Error ? error.message : String(error)}`,
+                title: arguments_.title,
+              },
+              null,
+              2,
+            ),
           },
         ],
         isError: true,
