@@ -47,16 +47,27 @@ export function registerTools(server: Server, wiki: Wiki, config: MCPConfig): vo
       try {
         // Check if the schema is valid
         // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-        const jsonSchema = zodToJsonSchema(tool.inputSchema, {
+        const inputJsonSchema = zodToJsonSchema(tool.inputSchema, {
           name: undefined,
           $refStrategy: 'none',
         });
+
+        // Convert output schema if it exists
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+        const outputJsonSchema = tool.outputSchema
+          ? zodToJsonSchema(tool.outputSchema, {
+            name: undefined,
+            $refStrategy: 'none',
+          })
+          : undefined;
 
         return {
           name: tool.name,
           description: tool.description,
           // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-          inputSchema: jsonSchema,
+          inputSchema: inputJsonSchema,
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+          outputSchema: outputJsonSchema,
         };
       } catch (error) {
         console.error(`[MCP] Error converting schema for ${tool.name}:`, error);

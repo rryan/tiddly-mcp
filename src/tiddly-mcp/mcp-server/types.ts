@@ -35,10 +35,14 @@ export interface Tiddler {
 /**
  * MCP Tool definition
  */
-export interface MCPTool<T extends z.ZodType = z.ZodType> {
+export interface MCPTool<
+  T extends z.ZodType = z.ZodType,
+  O extends z.ZodType = z.ZodType,
+> {
   name: string;
   description: string;
   inputSchema: T;
+  outputSchema?: O;
   handler: (arguments_: z.infer<T>, wiki: Wiki) => Promise<ToolResult>;
 }
 

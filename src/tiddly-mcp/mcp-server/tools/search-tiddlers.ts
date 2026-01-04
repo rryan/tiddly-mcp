@@ -3,7 +3,7 @@
  */
 
 import { z } from 'zod';
-import type { MCPTool, Tiddler } from '../types';
+import type { MCPTool } from '../types';
 
 const searchTiddlersInputSchema = z.object({
   query: z.string().describe('Search query text'),
@@ -11,10 +11,17 @@ const searchTiddlersInputSchema = z.object({
   caseSensitive: z.boolean().optional().default(false).describe('Whether search should be case-sensitive'),
 });
 
-export const searchTiddlersTool: MCPTool<typeof searchTiddlersInputSchema> = {
+const searchTiddlersOutputSchema = z.object({
+  query: z.string().describe('The search query that was executed'),
+  count: z.number().describe('Number of tiddlers matching the search query'),
+  results: z.array(z.string()).describe('Array of tiddler titles that match the search query'),
+}).describe('Search results containing the query, count of matches, and matching tiddler titles');
+
+export const searchTiddlersTool: MCPTool<typeof searchTiddlersInputSchema, typeof searchTiddlersOutputSchema> = {
   name: 'search_tiddlers',
   description: 'Search for tiddlers containing specific text',
   inputSchema: searchTiddlersInputSchema,
+  outputSchema: searchTiddlersOutputSchema,
   // eslint-disable-next-line @typescript-eslint/require-await
   async handler(arguments_, wiki) {
     console.log(`[MCP] search_tiddlers query=${arguments_.query} field=${arguments_.field} caseSensitive=${arguments_.caseSensitive}`);

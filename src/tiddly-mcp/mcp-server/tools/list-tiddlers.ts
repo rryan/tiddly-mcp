@@ -12,10 +12,30 @@ const listTiddlersInputSchema = z.object({
   includeDetails: z.boolean().optional().default(false).describe('Include tiddler details instead of just titles'),
 });
 
-export const listTiddlersTool: MCPTool<typeof listTiddlersInputSchema> = {
+const tiddlerDetailSchema = z.object({
+  title: z.string().describe('Title of the tiddler'),
+  text: z.string().describe('Content of the tiddler'),
+  tags: z.array(z.string()).optional().describe('Tags associated with the tiddler'), // TiddlyWiki normalizes tags to arrays
+  type: z.string().optional().describe('Content type of the tiddler'),
+  created: z.string().datetime().optional().describe('Creation timestamp'),
+  creator: z.string().optional().describe('Username of the creator'),
+  modified: z.string().datetime().optional().describe('Last modification timestamp'),
+  modifier: z.string().optional().describe('Username of the last modifier'),
+}).passthrough().describe('Full tiddler details with all fields');
+
+const listTiddlersOutputSchema = z.object({
+  count: z.number().describe('Total number of tiddlers returned'),
+  tiddlers: z.union([
+    z.array(z.string()).describe('Array of tiddler titles when includeDetails is false'),
+    z.array(tiddlerDetailSchema).describe('Array of tiddler objects with full details when includeDetails is true'),
+  ]).describe('List of tiddlers (titles only or full details based on includeDetails parameter)'),
+}).describe('List of tiddlers matching the filter criteria with count');
+
+export const listTiddlersTool: MCPTool<typeof listTiddlersInputSchema, typeof listTiddlersOutputSchema> = {
   name: 'list_tiddlers',
   description: 'List all tiddlers or filter them using a TiddlyWiki filter expression',
   inputSchema: listTiddlersInputSchema,
+  outputSchema: listTiddlersOutputSchema,
   // eslint-disable-next-line @typescript-eslint/require-await
   async handler(arguments_, wiki) {
     console.log(`[MCP] list_tiddlers filter=${arguments_.filter} includeSystem=${arguments_.includeSystem} limit=${arguments_.limit} includeDetails=${arguments_.includeDetails}`);
