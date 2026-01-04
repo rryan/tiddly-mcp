@@ -61,10 +61,16 @@ pnpm install
 pnpm build:folder
 ```
 
-To run the tests:
+To run the unit tests:
 
 ```bash
-pnpm run test
+pnpm test
+```
+
+To run integration tests with an MCP client against a development server:
+
+```bash
+pnpm test:live
 ```
 
 # Acknowledgements

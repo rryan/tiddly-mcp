@@ -10,10 +10,11 @@
   "version": "0.0.1",
   "scripts": {
     "dev": "tiddlywiki-plugin-dev dev",
-    "dev:lan": "tiddlywiki-plugin-dev dev --lan",
-    "dev:wiki": "tiddlywiki-plugin-dev dev --write-wiki",
     "test": "tsx run-tests.js",
+    "test:live": "timeout 8 npm run dev& sleep 4 && node test-tools-live.mjs",
     "build": "npm run clean && tiddlywiki-plugin-dev build",
+    "build:folder": "npm run clean && tiddlywiki-plugin-dev build && node convert-to-folder.mjs",
+    "build:release": "npm run clean && tiddlywiki-plugin-dev build && node convert-to-folder.mjs && cd dist && cp \\$__plugins_rryan_tiddly-mcp.json tiddly-mcp.json && tar czf tiddly-mcp.tar.gz tiddly-mcp",
     "lint": "eslint ./src --ext js,ts,tsx,json",
     "lint:fix": "eslint ./src --ext ts,tsx,json --fix",
     "check": "tsc --noEmit --skipLibCheck",
@@ -21,12 +22,7 @@
     "reset": "rimraf ./**/node_modules",
     "clean": "rimraf dist",
     "prepare": "husky install",
-    "update": "npm-check-updates -u && dprint config update",
-    "new": "tiddlywiki-plugin-dev new",
-    "build:library": "npm run clean && tiddlywiki-plugin-dev build --library --output dist/library",
-    "build:folder": "npm run clean && tiddlywiki-plugin-dev build && node convert-to-folder.mjs",
-    "build:release": "npm run clean && tiddlywiki-plugin-dev build && node convert-to-folder.mjs && cd dist && cp \\$__plugins_rryan_tiddly-mcp.json tiddly-mcp.json && tar czf tiddly-mcp.tar.gz tiddly-mcp",
-    "publish:offline": "npm run clean && tiddlywiki-plugin-dev publish --offline"
+    "update": "npm-check-updates -u && dprint config update"
   },
   "engines": {
     "node": ">=20"

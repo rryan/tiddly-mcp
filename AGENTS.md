@@ -3,9 +3,10 @@
 ## Development Workflow
 
 * Set up your environment with `pnpm install`. Do not use `npm install`.
-* Test your changes with `pnpm test`.
+* Run the project unit tests with `pnpm test`.
+* Run the integration tests with `pnpm test:live`.
 * Lint your changes with `pnpm lint`.
-* Start a local development server (blocking): `pnpm run dev`
+* Start a local development server (blocking) with `pnpm dev`.
 
 ## Requirements
 
@@ -14,4 +15,4 @@
 
 ## Pull Requests
 
-* Make sure tests pass and lint is clean before opening a pull request.
+* Make sure all tests pass and lint is clean before opening a pull request.
