@@ -50,10 +50,19 @@ export function registerTools(server: Server, wiki: Wiki, config: MCPConfig): vo
 
         const schemaString = JSON.stringify(jsonSchema);
 
+        let outputSchema;
+        if (tool.outputSchema) {
+          outputSchema = zodToJsonSchema(tool.outputSchema, {
+            name: undefined,
+            $refStrategy: 'none',
+          });
+        }
+
         return {
           name: tool.name,
           description: tool.description,
           inputSchema: jsonSchema,
+          outputSchema,
         };
       } catch (error) {
         console.error(`[MCP] Error converting schema for ${tool.name}:`, error);

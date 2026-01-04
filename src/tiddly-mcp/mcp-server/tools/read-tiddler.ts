@@ -14,6 +14,11 @@ export const readTiddlerTool: MCPTool<typeof readTiddlerInputSchema> = {
   name: 'read_tiddler',
   description: 'Read a tiddler and return its content and fields',
   inputSchema: readTiddlerInputSchema,
+  outputSchema: z.object({
+    title: z.string(),
+    text: z.string().optional(),
+    tags: z.array(z.string()).optional(),
+  }).passthrough().describe('Tiddler fields'),
   handler: async (arguments_, wiki) => {
     console.log(`[MCP] read_tiddler title=${arguments_.title}`);
     const tiddler = wiki.getTiddler(arguments_.title);

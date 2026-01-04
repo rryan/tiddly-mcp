@@ -18,6 +18,9 @@ export const writeTiddlerTool: MCPTool<typeof writeTiddlerInputSchema> = {
   name: 'write_tiddler',
   description: 'Create or update a tiddler with the specified content and fields',
   inputSchema: writeTiddlerInputSchema,
+  outputSchema: z.object({
+    message: z.string(),
+  }),
   handler: async (arguments_, wiki) => {
     console.log(`[MCP] write_tiddler title=${arguments_.title}`);
     try {
@@ -51,7 +54,9 @@ export const writeTiddlerTool: MCPTool<typeof writeTiddlerInputSchema> = {
         content: [
           {
             type: 'text' as const,
-            text: `Tiddler "${arguments_.title}" ${isUpdate ? 'updated' : 'created'} successfully`,
+            text: JSON.stringify({
+              message: `Tiddler "${arguments_.title}" ${isUpdate ? 'updated' : 'created'} successfully`,
+            }),
           },
         ],
       };

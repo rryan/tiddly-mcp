@@ -17,6 +17,13 @@ export const listTiddlersTool: MCPTool<typeof listTiddlersInputSchema> = {
   name: 'list_tiddlers',
   description: 'List all tiddlers or filter them using a TiddlyWiki filter expression',
   inputSchema: listTiddlersInputSchema,
+  outputSchema: z.object({
+    count: z.number(),
+    tiddlers: z.union([
+      z.array(z.string()),
+      z.array(z.record(z.any()))
+    ]),
+  }),
   handler: async (arguments_, wiki) => {
     console.log(`[MCP] list_tiddlers filter=${arguments_.filter} includeSystem=${arguments_.includeSystem} limit=${arguments_.limit} includeDetails=${arguments_.includeDetails}`);
     try {

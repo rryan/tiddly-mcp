@@ -14,6 +14,9 @@ export const deleteTiddlerTool: MCPTool<typeof deleteTiddlerInputSchema> = {
   name: 'delete_tiddler',
   description: 'Delete a tiddler from the wiki',
   inputSchema: deleteTiddlerInputSchema,
+  outputSchema: z.object({
+    message: z.string(),
+  }),
   handler: async (arguments_, wiki) => {
     console.log(`[MCP] delete_tiddler title=${arguments_.title}`);
     try {
@@ -39,7 +42,9 @@ export const deleteTiddlerTool: MCPTool<typeof deleteTiddlerInputSchema> = {
         content: [
           {
             type: 'text' as const,
-            text: `Tiddler "${arguments_.title}" deleted successfully`,
+            text: JSON.stringify({
+              message: `Tiddler "${arguments_.title}" deleted successfully`,
+            }),
           },
         ],
       };

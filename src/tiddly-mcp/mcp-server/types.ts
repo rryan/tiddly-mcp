@@ -34,6 +34,7 @@ export interface MCPTool<T extends z.ZodType = z.ZodType> {
   name: string;
   description: string;
   inputSchema: T;
+  outputSchema?: z.ZodType;
   handler: (arguments_: z.infer<T>, wiki: Wiki) => Promise<any>;
 }
 

@@ -16,6 +16,11 @@ export const searchTiddlersTool: MCPTool<typeof searchTiddlersInputSchema> = {
   name: 'search_tiddlers',
   description: 'Search for tiddlers containing specific text',
   inputSchema: searchTiddlersInputSchema,
+  outputSchema: z.object({
+    query: z.string(),
+    count: z.number(),
+    results: z.array(z.string()),
+  }),
   handler: async (arguments_, wiki) => {
     console.log(`[MCP] search_tiddlers query=${arguments_.query} field=${arguments_.field} caseSensitive=${arguments_.caseSensitive}`);
     try {
