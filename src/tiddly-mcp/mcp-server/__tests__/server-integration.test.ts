@@ -2,36 +2,46 @@
  * Integration tests for MCP server
  */
 
+// eslint-disable-next-line @typescript-eslint/no-deprecated
+import { Server } from '@modelcontextprotocol/sdk/server/index.js';
 import { createMCPServer } from '../server';
-import type { MCPConfig, Wiki } from '../types';
+import type { MCPConfig, Tiddler, Wiki } from '../types';
 
 // Mock Wiki for integration testing
 class TestWiki implements Wiki {
-  private data = new Map<string, any>();
+  private data = new Map<string, Tiddler>();
 
   constructor() {
     // Add some test data
-    this.data.set('TestTiddler', {
+    const testTiddler: Tiddler = {
       fields: {
         title: 'TestTiddler',
         text: 'Test content',
         tags: ['test'],
       },
-      getFieldString: (field: string) => this.data.get('TestTiddler')?.fields[field] || '',
-      getFieldList: (field: string) => this.data.get('TestTiddler')?.fields[field] || [],
-    });
+      getFieldString: (field: string) => (this.data.get('TestTiddler')?.fields[field] as string | undefined) || '',
+      getFieldList: (field: string) => (this.data.get('TestTiddler')?.fields[field] as string[] | undefined) || [],
+    };
+    this.data.set('TestTiddler', testTiddler);
   }
 
   getTiddler(title: string) {
     return this.data.get(title);
   }
 
-  addTiddler(tiddler: any) {
-    this.data.set(tiddler.title, {
-      fields: tiddler,
-      getFieldString: (field: string) => tiddler[field] || '',
-      getFieldList: (field: string) => tiddler[field] || [],
-    });
+  addTiddler(tiddler: Tiddler | Record<string, unknown>) {
+    let newTiddler: Tiddler;
+    if ('fields' in tiddler) {
+      newTiddler = tiddler as Tiddler;
+    } else {
+      const fields = tiddler;
+      newTiddler = {
+        fields,
+        getFieldString: (field: string) => (fields[field] as string | undefined) || '',
+        getFieldList: (field: string) => (fields[field] as string[] | undefined) || [],
+      };
+    }
+    this.data.set(newTiddler.fields.title as string, newTiddler);
   }
 
   deleteTiddler(title: string) {
@@ -39,6 +49,7 @@ class TestWiki implements Wiki {
   }
 
   filterTiddlers(filter: string) {
+    const _ = filter;
     return Array.from(this.data.keys());
   }
 
@@ -47,11 +58,11 @@ class TestWiki implements Wiki {
   }
 
   getTiddlerText(title: string, defaultText?: string) {
-    return this.data.get(title)?.fields.text || defaultText || '';
+    return (this.data.get(title)?.fields.text as string) || defaultText || '';
   }
 
   search(text: string) {
-    const results: any[] = [];
+    const results: { title: string }[] = [];
     this.data.forEach((tiddler, title) => {
       if (JSON.stringify(tiddler.fields).toLowerCase().includes(text.toLowerCase())) {
         results.push({ title });
@@ -62,7 +73,8 @@ class TestWiki implements Wiki {
 }
 
 describe('MCP Server Integration', () => {
-  let server: any;
+  // eslint-disable-next-line @typescript-eslint/no-deprecated
+  let server: Server;
   let wiki: Wiki;
 
   beforeEach(() => {

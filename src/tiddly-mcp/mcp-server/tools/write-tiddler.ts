@@ -2,9 +2,8 @@
  * Write tiddler tool - create or update a tiddler
  */
 
+import { z } from 'zod';
 import type { MCPTool } from '../types';
-
-const { z } = require('zod');
 
 const writeTiddlerInputSchema = z.object({
   title: z.string().describe('Title of the tiddler'),
@@ -18,6 +17,7 @@ export const writeTiddlerTool: MCPTool<typeof writeTiddlerInputSchema> = {
   name: 'write_tiddler',
   description: 'Create or update a tiddler with the specified content and fields',
   inputSchema: writeTiddlerInputSchema,
+  // eslint-disable-next-line @typescript-eslint/require-await
   handler: async (arguments_, wiki) => {
     console.log(`[MCP] write_tiddler title=${arguments_.title}`);
     try {
@@ -30,7 +30,7 @@ export const writeTiddlerTool: MCPTool<typeof writeTiddlerInputSchema> = {
 
       const defaultType = wiki.getTiddlerText('$:/plugins/rryan/tiddly-mcp/configs/default-content-type', 'text/vnd.tiddlywiki');
 
-      const tiddlerFields: Record<string, any> = {
+      const tiddlerFields: Record<string, unknown> = {
         title: arguments_.title,
         text: arguments_.text,
         type: arguments_.type ? arguments_.type : defaultType,

@@ -2,7 +2,7 @@
  * Comprehensive unit tests for TiddlyWiki MCP tools
  */
 
-import type { Wiki } from '../../types';
+import type { Tiddler, Wiki } from '../../types';
 import { deleteTiddlerTool } from '../delete-tiddler';
 import { listTiddlersTool } from '../list-tiddlers';
 import { readTiddlerTool } from '../read-tiddler';
@@ -11,15 +11,19 @@ import { writeTiddlerTool } from '../write-tiddler';
 
 // Mock Wiki implementation for testing
 class MockWiki implements Wiki {
-  private tiddlers: Map<string, any> = new Map();
+  private tiddlers: Map<string, Tiddler> = new Map();
 
-  constructor(initialTiddlers: any[] = []) {
-    initialTiddlers.forEach(tiddler => {
-      this.tiddlers.set(tiddler.title, {
-        fields: tiddler,
-        getFieldString: (field: string) => tiddler[field] || '',
-        getFieldList: (field: string) => tiddler[field] || [],
-      });
+  constructor(initialTiddlers: Record<string, unknown>[] = []) {
+    initialTiddlers.forEach((fields) => {
+      const title = fields.title as string;
+      const tiddler: Tiddler = {
+        fields,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-return
+        getFieldString: (field: string) => (fields[field] as any) || '',
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-return
+        getFieldList: (field: string) => (fields[field] as any) || [],
+      };
+      this.tiddlers.set(title, tiddler);
     });
   }
 
@@ -27,13 +31,21 @@ class MockWiki implements Wiki {
     return this.tiddlers.get(title);
   }
 
-  addTiddler(tiddler: any) {
-    const title = tiddler.title;
-    this.tiddlers.set(title, {
-      fields: tiddler,
-      getFieldString: (field: string) => tiddler[field] || '',
-      getFieldList: (field: string) => tiddler[field] || [],
-    });
+  addTiddler(tiddler: Tiddler | Record<string, unknown>) {
+    let newTiddler: Tiddler;
+    if ('fields' in tiddler) {
+      newTiddler = tiddler as Tiddler;
+    } else {
+      const fields = tiddler;
+      newTiddler = {
+        fields,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-return
+        getFieldString: (field: string) => (fields[field] as any) || '',
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-return
+        getFieldList: (field: string) => (fields[field] as any) || [],
+      };
+    }
+    this.tiddlers.set(newTiddler.fields.title as string, newTiddler);
   }
 
   deleteTiddler(title: string) {
@@ -48,9 +60,10 @@ class MockWiki implements Wiki {
       const tagMatch = filter.match(/\[tag\[([^\]]+)\]\]/);
       if (tagMatch) {
         const tag = tagMatch[1];
-        return titles.filter(title => {
+        return titles.filter((title) => {
           const tiddler = this.tiddlers.get(title);
-          return tiddler?.fields.tags?.includes(tag);
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
+          return (tiddler?.fields.tags as any)?.includes(tag);
         });
       }
     }
@@ -64,17 +77,22 @@ class MockWiki implements Wiki {
 
   getTiddlerText(title: string, defaultText?: string) {
     const tiddler = this.tiddlers.get(title);
-    return tiddler?.fields.text || defaultText || '';
+    return (tiddler?.fields.text as string) || defaultText || '';
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   search(text: string, options?: any) {
-    const results: any[] = [];
+    const results: { title: string }[] = [];
     this.tiddlers.forEach((tiddler, title) => {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
       const searchIn = options?.field
-        ? tiddler.fields[options.field] || ''
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+        ? (tiddler.fields[options.field] as string) || ''
         : JSON.stringify(tiddler.fields);
 
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
       const query = options?.caseSensitive ? text : text.toLowerCase();
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
       const content = options?.caseSensitive ? searchIn : searchIn.toLowerCase();
 
       if (content.includes(query)) {
@@ -98,10 +116,14 @@ describe('TiddlyWiki MCP Tools', () => {
       ]);
 
       const result = await readTiddlerTool.handler({ title: 'TestTiddler' }, wiki);
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
       const data = JSON.parse(result.content[0].text);
 
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
       expect(data.title).toBe('TestTiddler');
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
       expect(data.text).toBe('This is test content');
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
       expect(data.tags).toEqual(['test', 'demo']);
       expect(result.isError).toBeUndefined();
     });
@@ -124,9 +146,12 @@ describe('TiddlyWiki MCP Tools', () => {
       ]);
 
       const result = await readTiddlerTool.handler({ title: '$:/config/test' }, wiki);
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
       const data = JSON.parse(result.content[0].text);
 
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
       expect(data.title).toBe('$:/config/test');
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
       expect(data.text).toBe('System config');
     });
   });
@@ -249,11 +274,16 @@ describe('TiddlyWiki MCP Tools', () => {
       ]);
 
       const result = await listTiddlersTool.handler({}, wiki);
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
       const data = JSON.parse(result.content[0].text);
 
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
       expect(data.count).toBe(3);
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
       expect(data.tiddlers).toContain('Tiddler1');
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
       expect(data.tiddlers).toContain('Tiddler2');
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
       expect(data.tiddlers).toContain('Tiddler3');
     });
 
@@ -264,9 +294,12 @@ describe('TiddlyWiki MCP Tools', () => {
       ]);
 
       const result = await listTiddlersTool.handler({}, wiki);
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
       const data = JSON.parse(result.content[0].text);
 
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
       expect(data.tiddlers).toContain('Regular');
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
       expect(data.tiddlers).not.toContain('$:/system');
     });
 
@@ -277,9 +310,12 @@ describe('TiddlyWiki MCP Tools', () => {
       ]);
 
       const result = await listTiddlersTool.handler({ includeSystem: true }, wiki);
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
       const data = JSON.parse(result.content[0].text);
 
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
       expect(data.tiddlers).toContain('Regular');
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
       expect(data.tiddlers).toContain('$:/system');
     });
 
@@ -292,9 +328,12 @@ describe('TiddlyWiki MCP Tools', () => {
       ]);
 
       const result = await listTiddlersTool.handler({ limit: 2 }, wiki);
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
       const data = JSON.parse(result.content[0].text);
 
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
       expect(data.count).toBe(2);
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
       expect(data.tiddlers.length).toBe(2);
     });
   });
@@ -308,11 +347,16 @@ describe('TiddlyWiki MCP Tools', () => {
       ]);
 
       const result = await searchTiddlersTool.handler({ query: 'test' }, wiki);
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
       const data = JSON.parse(result.content[0].text);
 
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
       expect(data.count).toBe(2);
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
       expect(data.results).toContain('Match1');
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
       expect(data.results).toContain('Match2');
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
       expect(data.results).not.toContain('NoMatch');
     });
 
@@ -327,9 +371,12 @@ describe('TiddlyWiki MCP Tools', () => {
         { query: 'TEST', caseSensitive: true },
         wiki,
       );
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
       const data = JSON.parse(result.content[0].text);
 
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
       expect(data.results).toContain('Upper');
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
       expect(data.results).not.toContain('Lower');
     });
 
@@ -339,9 +386,12 @@ describe('TiddlyWiki MCP Tools', () => {
       ]);
 
       const result = await searchTiddlersTool.handler({ query: 'nomatch' }, wiki);
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
       const data = JSON.parse(result.content[0].text);
 
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
       expect(data.count).toBe(0);
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
       expect(data.results).toEqual([]);
     });
   });
@@ -358,11 +408,16 @@ describe('TiddlyWiki MCP Tools', () => {
         { filter: '[tag[journal]]' },
         wiki,
       );
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
       const data = JSON.parse(result.content[0].text);
 
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
       expect(data.count).toBe(2);
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
       expect(data.tiddlers).toContain('T1');
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
       expect(data.tiddlers).toContain('T2');
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
       expect(data.tiddlers).not.toContain('T3');
     });
 
@@ -375,9 +430,12 @@ describe('TiddlyWiki MCP Tools', () => {
         { filter: '[all[tiddlers]]', includeDetails: false },
         wiki,
       );
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
       const data = JSON.parse(result.content[0].text);
 
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
       expect(Array.isArray(data.tiddlers)).toBe(true);
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
       expect(typeof data.tiddlers[0]).toBe('string');
     });
 
@@ -395,11 +453,16 @@ describe('TiddlyWiki MCP Tools', () => {
         { filter: '[all[tiddlers]]', includeDetails: true },
         wiki,
       );
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
       const data = JSON.parse(result.content[0].text);
 
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
       expect(data.tiddlers[0].title).toBeDefined();
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
       expect(data.tiddlers[0].text).toBeDefined();
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
       expect(data.tiddlers[0].tags).toBeDefined();
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
       expect(data.tiddlers[0].type).toBeDefined();
     });
   });

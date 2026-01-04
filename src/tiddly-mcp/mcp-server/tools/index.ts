@@ -3,7 +3,8 @@
  */
 
 import type { Server } from '@modelcontextprotocol/sdk/server/index.js';
-import type { MCPConfig, MCPTool, Wiki } from '../types';
+import { ZodType } from 'zod';
+import type { MCPConfig, MCPTool, ToolResult, Wiki } from '../types';
 import { deleteTiddlerTool } from './delete-tiddler';
 import { listTiddlersTool } from './list-tiddlers';
 import { readTiddlerTool } from './read-tiddler';
@@ -11,22 +12,23 @@ import { searchTiddlersTool } from './search-tiddlers';
 import { writeTiddlerTool } from './write-tiddler';
 
 // Dynamic imports for runtime dependencies
-const {
-  CallToolRequestSchema,
-  ListToolsRequestSchema,
-} = require('@modelcontextprotocol/sdk/types.js');
+// eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-unsafe-assignment
+const { CallToolRequestSchema, ListToolsRequestSchema } = require('@modelcontextprotocol/sdk/types.js');
+// eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-unsafe-assignment
 const { zodToJsonSchema } = require('zod-to-json-schema');
 
 /**
  * Register all tools with the MCP server
  */
-export function registerTools(server: Server, wiki: Wiki, config: MCPConfig): void {
+export function registerTools(
+  // eslint-disable-next-line @typescript-eslint/no-deprecated
+  server: Server,
+  wiki: Wiki,
+  config: MCPConfig,
+): void {
   // Collect all tools
-  const tools: MCPTool[] = [
-    readTiddlerTool,
-    listTiddlersTool,
-    searchTiddlersTool,
-  ];
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const tools: MCPTool<any>[] = [readTiddlerTool, listTiddlersTool, searchTiddlersTool];
 
   if (!config.readOnly) {
     tools.push(deleteTiddlerTool);
@@ -34,25 +36,27 @@ export function registerTools(server: Server, wiki: Wiki, config: MCPConfig): vo
   }
 
   // Create a map for quick tool lookup
-  const toolMap = new Map<string, MCPTool>();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const toolMap = new Map<string, MCPTool<any>>();
   tools.forEach((tool) => toolMap.set(tool.name, tool));
 
   // Handle ListTools request
-  server.setRequestHandler(ListToolsRequestSchema, async () => {
+
+  server.setRequestHandler(ListToolsRequestSchema, () => {
     console.log('[MCP] tools/list_tools');
     const toolsList = tools.map((tool) => {
       try {
         // Check if the schema is valid
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-assignment
         const jsonSchema = zodToJsonSchema(tool.inputSchema, {
           name: undefined,
           $refStrategy: 'none',
         });
 
-        const schemaString = JSON.stringify(jsonSchema);
-
         return {
           name: tool.name,
           description: tool.description,
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
           inputSchema: jsonSchema,
         };
       } catch (error) {
@@ -72,9 +76,12 @@ export function registerTools(server: Server, wiki: Wiki, config: MCPConfig): vo
   });
 
   // Handle CallTool request
+
   server.setRequestHandler(CallToolRequestSchema, async (request) => {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
     const { name, arguments: arguments_ } = request.params;
 
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
     const tool = toolMap.get(name);
     if (!tool) {
       throw new Error(`Unknown tool: ${name}`);
@@ -82,10 +89,11 @@ export function registerTools(server: Server, wiki: Wiki, config: MCPConfig): vo
 
     try {
       // Validate and parse arguments
-      const validatedArguments = tool.inputSchema.parse(arguments_);
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+      const validatedArguments = (tool.inputSchema as ZodType).parse(arguments_);
 
       // Execute tool handler
-      const result = await tool.handler(validatedArguments, wiki);
+      const result: ToolResult = await tool.handler(validatedArguments, wiki);
 
       return result;
     } catch (error) {
@@ -94,6 +102,7 @@ export function registerTools(server: Server, wiki: Wiki, config: MCPConfig): vo
         content: [
           {
             type: 'text' as const,
+
             text: `Error executing tool ${name}: ${error instanceof Error ? error.message : String(error)}`,
           },
         ],

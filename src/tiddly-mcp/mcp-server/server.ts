@@ -7,13 +7,18 @@ import type { Wiki } from './types';
 import type { MCPConfig } from './types';
 
 // Dynamic import for MCP SDK at runtime
+// eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-unsafe-assignment
 const { Server } = require('@modelcontextprotocol/sdk/server/index.js');
+
+import type { Server as ServerType } from '@modelcontextprotocol/sdk/server/index.js';
 
 /**
  * Create and configure the MCP server
  */
-export function createMCPServer(wiki: Wiki, config: MCPConfig): any {
+// eslint-disable-next-line @typescript-eslint/no-deprecated
+export function createMCPServer(wiki: Wiki, config: MCPConfig): ServerType {
   // Create the server instance
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-call
   const server = new Server(
     {
       name: 'tiddlywiki-mcp',
@@ -24,9 +29,11 @@ export function createMCPServer(wiki: Wiki, config: MCPConfig): any {
         tools: {},
       },
     },
-  );
+    // eslint-disable-next-line @typescript-eslint/no-deprecated
+  ) as ServerType;
 
   // Register all tools
+
   registerTools(server, wiki, config);
 
   // Error handling

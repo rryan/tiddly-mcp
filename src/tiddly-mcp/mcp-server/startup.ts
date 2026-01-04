@@ -6,11 +6,14 @@
 // CRITICAL: Polyfills MUST be inline here, before ANY imports
 // ESBuild bundles everything, so imported polyfills don't run early enough
 if (typeof global === 'undefined') {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access
   (globalThis as any).global = globalThis;
 }
 
 if (typeof AbortController === 'undefined') {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access
   (globalThis as any).AbortController = class AbortController {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     signal: any;
     constructor() {
       this.signal = {
@@ -20,6 +23,7 @@ if (typeof AbortController === 'undefined') {
       };
     }
     abort() {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
       this.signal.aborted = true;
     }
   };
@@ -67,6 +71,7 @@ function startup() {
     const httpServer = createHTTPServer(mcpServer, config);
 
     // Store server instance for cleanup
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access
     ($tw as any).mcpServer = {
       mcp: mcpServer,
       http: httpServer,
@@ -94,18 +99,19 @@ function parseCorsOrigins(originsString: string): string[] {
 
 // TypeScript declarations for TiddlyWiki globals
 declare global {
-  const $tw: {
+  var $tw: {
     node: boolean;
-    wiki: any;
+    wiki: Wiki;
     mcpServer?: {
-      mcp: any;
-      http: any;
+      mcp: unknown;
+      http: unknown;
     };
   };
 }
 
 // CommonJS export pattern for TiddlyWiki
-declare let exports: {
+
+declare var exports: {
   name: string;
   platforms: string[];
   after: string[];

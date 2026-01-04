@@ -2,9 +2,8 @@
  * Search tiddlers tool - search for tiddlers by text content
  */
 
+import { z } from 'zod';
 import type { MCPTool } from '../types';
-
-const { z } = require('zod');
 
 const searchTiddlersInputSchema = z.object({
   query: z.string().describe('Search query text'),
@@ -16,6 +15,7 @@ export const searchTiddlersTool: MCPTool<typeof searchTiddlersInputSchema> = {
   name: 'search_tiddlers',
   description: 'Search for tiddlers containing specific text',
   inputSchema: searchTiddlersInputSchema,
+  // eslint-disable-next-line @typescript-eslint/require-await
   handler: async (arguments_, wiki) => {
     console.log(`[MCP] search_tiddlers query=${arguments_.query} field=${arguments_.field} caseSensitive=${arguments_.caseSensitive}`);
     try {
@@ -26,7 +26,15 @@ export const searchTiddlersTool: MCPTool<typeof searchTiddlersInputSchema> = {
       });
 
       // Extract tiddler titles from results
-      const tiddlerTitles = results.map((result: any) => result.title || result);
+      const tiddlerTitles = results.map((result) => {
+        if (typeof result === 'string') {
+          return result;
+        }
+        if (typeof result === 'object' && result !== null && 'title' in result) {
+          return (result as { title: string }).title;
+        }
+        return String(result);
+      });
 
       return {
         content: [

@@ -2,9 +2,8 @@
  * Delete tiddler tool - remove a tiddler from the wiki
  */
 
+import { z } from 'zod';
 import type { MCPTool } from '../types';
-
-const { z } = require('zod');
 
 const deleteTiddlerInputSchema = z.object({
   title: z.string().describe('Title of the tiddler to delete'),
@@ -14,6 +13,7 @@ export const deleteTiddlerTool: MCPTool<typeof deleteTiddlerInputSchema> = {
   name: 'delete_tiddler',
   description: 'Delete a tiddler from the wiki',
   inputSchema: deleteTiddlerInputSchema,
+  // eslint-disable-next-line @typescript-eslint/require-await
   handler: async (arguments_, wiki) => {
     console.log(`[MCP] delete_tiddler title=${arguments_.title}`);
     try {
